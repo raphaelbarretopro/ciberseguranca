@@ -527,7 +527,14 @@ function mostrarResultadoFinal() {
   const pontuacaoTotal = calcularPontuacao();
 
   const percentual = Math.round((pontuacaoTotal / 1000) * 100);
-
+  // Criação do botão "Imprimir em PDF"
+  const imprimirBtn = document.createElement('button');
+  imprimirBtn.textContent = 'Imprimir em PDF';
+  imprimirBtn.id = 'btnImprimirPDF';
+  imprimirBtn.className = 'btn-reiniciar'; // ou 'btn-revisar', conforme o padrão dos outros
+  imprimirBtn.style.background = '#e53935'; // vermelho
+  imprimirBtn.style.color = '#fff';
+  imprimirBtn.onclick = () => window.print();
   resultado.innerHTML = `
     <center>
   <h1>Resultado Final - AV1 – Exame Checkpoint: Segurança de Rede</h1>
@@ -544,10 +551,15 @@ function mostrarResultadoFinal() {
       <div style="margin-top: 30px; display: flex; justify-content: center; gap: 10px;">
         <button id="refazerBtn" class="btn-reiniciar">Refazer Avaliação</button>
         <button id="revisarBtn" class="btn-revisar">Revisar Questões</button>
-  <button id="emitirRelatorioBtn" class="btn-reiniciar">Emitir Relatório</button>
+  <button id="btnImprimirPDF" class="btn-reiniciar">Emitir Relatório</button>
       </div>
     </center>
   `;
+
+
+
+
+
 
   quiz.appendChild(resultado);
 
@@ -562,7 +574,7 @@ function mostrarResultadoFinal() {
   // Botões
   document.getElementById('refazerBtn').onclick = refazerSimulado;
   document.getElementById('revisarBtn').onclick = revisarQuestoes;
-  document.getElementById('emitirRelatorioBtn').onclick = emitirRelatorioPDF;
+  document.getElementById('btnImprimirPDF').onclick = emitirRelatorioPDF;
   
 
   const toggleSidebarBtn = document.getElementById('toggleSidebar');
@@ -570,6 +582,34 @@ function mostrarResultadoFinal() {
 
   const progressoContainer = document.getElementById('progressoContainer');
   if (progressoContainer) progressoContainer.style.display = 'none';
+}
+
+// ==========================================
+// Função: emitirRelatorioPDF()
+// Descrição: Função para emitir relatório em PDF do resultado final
+// ==========================================
+function emitirRelatorioPDF() {
+  if (!window.jspdf || !window.html2canvas) {
+    alert('jsPDF ou html2canvas não estão disponíveis. Adicione as bibliotecas jsPDF e html2canvas ao projeto.');
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
+  const resultadoDiv = document.querySelector('.resultado-final');
+  if (!resultadoDiv) {
+    alert('Resultado Final não encontrado.');
+    return;
+  }
+  window.html2canvas(resultadoDiv).then(canvas => {
+    const imgData = canvas.toDataURL('image/png');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    // Ajusta imagem para caber na página
+    doc.addImage(imgData, 'PNG', 0, 0, pageWidth, pageHeight);
+    doc.save('relatorio_resultado_final.pdf');
+  }).catch(() => {
+    alert('Erro ao gerar o relatório em PDF.');
+  });
 }
 
 
@@ -797,7 +837,6 @@ function revisarQuestoes() {
   // Eventos
   document.getElementById('refazerBtn').onclick = refazerSimulado;
   document.getElementById('voltarResultadoBtn').onclick = voltarResultadoFinal;
-  document.getElementById('emitirCertificadoBtn').onclick = emitirCertificado;
 
 // Função para emitir certificado em PDF
 // Função para emitir relatório em PDF do resultado final
@@ -833,6 +872,7 @@ function voltarResultadoFinal() {
   // Reatribui eventos
   document.getElementById('refazerBtn').onclick = refazerSimulado;
   document.getElementById('revisarBtn').onclick = revisarQuestoes;
+  document.getElementById('btnImprimirPDF').onclick = emitirRelatorioPDF;
 
   // Redesenha os gráficos
   setTimeout(() => {
@@ -842,6 +882,7 @@ function voltarResultadoFinal() {
   // 🛠️ Corrige layout dos botões
   const refazerBtn = document.getElementById('refazerBtn');
   const revisarBtn = document.getElementById('revisarBtn');
+  const emitirRelatorioBtn = document.getElementById('btnImprimirPDF');
 
   // Cria novo container flexível
   const botoesContainer = document.createElement('div');
@@ -849,6 +890,9 @@ function voltarResultadoFinal() {
 
   botoesContainer.appendChild(refazerBtn);
   botoesContainer.appendChild(revisarBtn);
+  if (emitirRelatorioBtn) {
+    botoesContainer.appendChild(emitirRelatorioBtn);
+  }
 
   const botaoContainerAntigo = document.querySelector('center > div');
   if (botaoContainerAntigo) botaoContainerAntigo.remove();
